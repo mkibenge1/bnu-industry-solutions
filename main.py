@@ -1,12 +1,20 @@
-from models.bnu_models import Product, Supplier
+from models.bnu_models import OrderLine, Product, Supplier
+from services.finance_service import FinanceService
 from services.inventory_service import InventoryService
+from services.order_service import OrderService
 from services.supplier_service import SupplierService
 
 
 def main() -> None:
     supplier_service = SupplierService()
     inventory_service = InventoryService()
-    
+    finance_service = FinanceService()
+    order_service = OrderService(
+        inventory_service=inventory_service,
+        supplier_service=supplier_service,
+        finance_service=finance_service,
+    )
+
     # Added test suppliers
     supplier_1 = Supplier(
         supplier_id="S001",
@@ -67,6 +75,28 @@ def main() -> None:
 
     inventory_service.receive_stock("P001", 20)
 
+    # Create a purchase order to restock the low-stock gloves product
+    purchase_order = order_service.create_purchase_order(
+        supplier_id="S002",
+        lines=[
+            OrderLine(product_id="P002", quantity=20, unit_price=8.50),
+        ],
+    )
+
+    # Simulate supplier dispatch and warehouse delivery confirmation
+    order_service.mark_purchase_order_as_shipped(purchase_order.order_id)
+    order_service.receive_purchase_order(purchase_order.order_id)
+
+    # Create a customer order; the system should reduce stock and record a sale
+    customer_order = order_service.create_customer_order(
+        customer_name="Baker Construction Ltd",
+        customer_email="orders@bakerconstruction.co.uk",
+        lines=[
+            OrderLine(product_id="P001", quantity=5, unit_price=12.99),
+            OrderLine(product_id="P003", quantity=2, unit_price=15.75),
+        ],
+    )
+
     # list active suppliers
     print("=== ACTIVE SUPPLIERS ===")
     for current_supplier in supplier_service.list_active_suppliers():
@@ -77,6 +107,27 @@ def main() -> None:
     for current_product in inventory_service.list_products():
         print(current_product)
 
+    # Show purchase order workflow results
+    print("\n=== PURCHASE ORDERS ===")
+    for current_order in order_service.list_purchase_orders():
+        print(current_order)
+
+    # Show customer order records
+    print("\n=== CUSTOMER ORDERS ===")
+    for current_order in order_service.list_customer_orders():
+        print(current_order)
+
+    # Show all recorded financial transactions
+    print("\n=== FINANCIAL TRANSACTIONS ===")
+    for transaction in finance_service.get_all_transactions():
+        print(transaction.to_report_row())
+
+    # Financial summary generated from recorded sales and expenses
+    print("\n=== FINANCIAL SUMMARY ===")
+    print(f"Total Sales: £{finance_service.total_sales():.2f}")
+    print(f"Total Expenses: £{finance_service.total_expenses():.2f}")
+    print(f"Profit: £{finance_service.profit():.2f}")
+
     # Low stock products listed
     print("\n=== LOW STOCK ALERTS ===")
     low_stock_products = inventory_service.low_stock_products()
@@ -85,6 +136,11 @@ def main() -> None:
     else:
         for low_stock_product in low_stock_products:
             print(low_stock_product)
+
+    # Prevent unused variable warning and make it clear both orders were created
+    print("\n=== ORDER REFERENCES ===")
+    print(f"Purchase Order Created: {purchase_order.order_id}")
+    print(f"Customer Order Created: {customer_order.order_id}")
 
 
 if __name__ == "__main__":
