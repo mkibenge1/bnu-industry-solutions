@@ -1,0 +1,65 @@
+[
+    {
+        "supplier_id": "S001",
+        "name": "Midlands Industrial Supplies Ltd",
+        "contact_name": "Sarah Bennett",
+        "email": "sarah.bennett@midlandsindustrial.co.uk",
+        "phone": "01494 555321",
+        "address": "High Wycombe",
+        "is_active": true
+    },
+    {
+        "supplier_id": "S002",
+        "name": "Thames Valley Safety Equipment Ltd",
+        "contact_name": "Michael Turner",
+        "email": "m.turner@tvse.co.uk",
+        "phone": "01628 442210",
+        "address": "Slough",
+        "is_active": true
+    },
+    {
+        "supplier_id": "S003",
+        "name": "Midlands Industrial Supplies Ltd",
+        "contact_name": "Sarah Bennett",
+        "email": "sarah.bennett@midlandsindustrial.co.uk",
+        "phone": "01494 555321",
+        "address": "High Wycombe",
+        "is_active": true
+    },
+    {
+        "supplier_id": "S004",
+        "name": "Thames Valley Safety Equipment Ltd",
+        "contact_name": "Michael Turner",
+        "email": "m.turner@tvse.co.uk",
+        "phone": "01628 442210",
+        "address": "Slough",
+        "is_active": true
+    },
+    {
+        "supplier_id": "S005",
+        "name": "test",
+        "contact_name": "testname",
+        "email": "test",
+        "phone": "0000",
+        "address": "4433",
+        "is_active": true
+    },
+    {
+        "supplier_id": "S006",
+        "name": "Midlands Industrial Supplies Ltd",
+        "contact_name": "Sarah Bennett",
+        "email": "sarah.bennett@midlandsindustrial.co.uk",
+        "phone": "01494 555321",
+        "address": "High Wycombe",
+        "is_active": true
+    },
+    {
+        "supplier_id": "S007",
+        "name": "Thames Valley Safety Equipment Ltd",
+        "contact_name": "Michael Turner",
+        "email": "m.turner@tvse.co.uk",
+        "phone": "01628 442210",
+        "address": "Slough",
+        "is_active": true
+    }
+]

@@ -1,0 +1,65 @@
+[
+    {
+        "product_id": "P001",
+        "name": "Industrial Hammer",
+        "description": "Heavy-duty hammer",
+        "unit_price": 12.99,
+        "stock_quantity": 64,
+        "reorder_level": 10,
+        "supplier_id": "S003"
+    },
+    {
+        "product_id": "P002",
+        "name": "Safety Gloves Pack",
+        "description": "Pack of 10 reinforced gloves",
+        "unit_price": 8.5,
+        "stock_quantity": 6,
+        "reorder_level": 10,
+        "supplier_id": "S004"
+    },
+    {
+        "product_id": "P003",
+        "name": "Adjustable Spanner",
+        "description": "Steel adjustable spanner",
+        "unit_price": 15.75,
+        "stock_quantity": 22,
+        "reorder_level": 5,
+        "supplier_id": "S003"
+    },
+    {
+        "product_id": "P004",
+        "name": "Test",
+        "description": "a test product",
+        "unit_price": 12.99,
+        "stock_quantity": 123,
+        "reorder_level": 12,
+        "supplier_id": "S001"
+    },
+    {
+        "product_id": "P005",
+        "name": "Industrial Hammer",
+        "description": "Heavy-duty hammer",
+        "unit_price": 12.99,
+        "stock_quantity": 50,
+        "reorder_level": 10,
+        "supplier_id": "S006"
+    },
+    {
+        "product_id": "P006",
+        "name": "Safety Gloves Pack",
+        "description": "Pack of 10 reinforced gloves",
+        "unit_price": 8.5,
+        "stock_quantity": 6,
+        "reorder_level": 10,
+        "supplier_id": "S007"
+    },
+    {
+        "product_id": "P007",
+        "name": "Adjustable Spanner",
+        "description": "Steel adjustable spanner",
+        "unit_price": 15.75,
+        "stock_quantity": 22,
+        "reorder_level": 5,
+        "supplier_id": "S006"
+    }
+]

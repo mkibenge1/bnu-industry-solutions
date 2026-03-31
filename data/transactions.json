@@ -1,0 +1,18 @@
+[
+    {
+        "transaction_id": "T001",
+        "amount": 12.99,
+        "created_at": "2026-03-31T22:14:16.512761",
+        "description": "Customer order CO001",
+        "transaction_type": "sale",
+        "related_order_id": "CO001"
+    },
+    {
+        "transaction_id": "T002",
+        "amount": 64.95,
+        "created_at": "2026-03-31T22:29:57.757882",
+        "description": "Purchase order PO001",
+        "transaction_type": "expense",
+        "related_order_id": "PO001"
+    }
+]

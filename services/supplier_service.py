@@ -1,14 +1,19 @@
 from models.bnu_models import Supplier
+from repositories.supplier_repository import SupplierRepository
 
 
 class SupplierService:
     def __init__(self) -> None:
-        self._suppliers: list[Supplier] = []
-    
+        self._supplier_repository = SupplierRepository()
+        self._suppliers: list[Supplier] = self._supplier_repository.load()
+
+    def _save_suppliers(self) -> None:
+        self._supplier_repository.save(self._suppliers)
+
     # Generates unique ID
     def _generate_supplier_id(self) -> str:
         return f"S{len(self._suppliers) + 1:03}"
-    
+
     # Adds a new supplier and assigns a unique ID
     def add_supplier(
         self,
@@ -27,19 +32,20 @@ class SupplierService:
             address=address,
         )
         self._suppliers.append(supplier)
+        self._save_suppliers() # Save to JSON
         return supplier
-    
+
     # Retrieves supplier info using their ID, otherwise returns none if not found
     def get_supplier_by_id(self, supplier_id: str) -> Supplier | None:
         for supplier in self._suppliers:
             if supplier.supplier_id == supplier_id:
                 return supplier
         return None
-    
+
     # Returns a list of all active suppliers
     def list_active_suppliers(self) -> list[Supplier]:
         return [supplier for supplier in self._suppliers if supplier.is_active]
-    
+
     # Updates supplier info
     def update_supplier(
         self,
@@ -59,6 +65,7 @@ class SupplierService:
         supplier.email = email
         supplier.phone = phone
         supplier.address = address
+        self._save_suppliers() # Save to JSON
 
     # Deactivates a supplier, preventing future orders from them
     def deactivate_supplier(self, supplier_id: str) -> None:
@@ -66,3 +73,4 @@ class SupplierService:
         if supplier is None:
             raise ValueError("Supplier not found.")
         supplier.is_active = False
+        self._save_suppliers() # Save to JSON

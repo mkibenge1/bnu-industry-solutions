@@ -1,10 +1,13 @@
 from models.bnu_models import Product
+from repositories.product_repository import ProductRepository
+
 
 class InventoryService:
     def __init__(self) -> None:
-        self._products: list[Product] = []
+        self._product_repository = ProductRepository()
+        self._products: list[Product] = self._product_repository.load() # Load products from JSON
 
-    # Generates unique ID
+    # Generates a new unique product ID
     def _generate_product_id(self) -> str:
         return f"P{len(self._products) + 1:03}"
 
@@ -28,6 +31,7 @@ class InventoryService:
             supplier_id=supplier_id,
         )
         self._products.append(product)
+        self._product_repository.save(self._products) # Save to JSON
         return product
 
     # Retrieves a product by its unique ID, returns None if not found
@@ -60,6 +64,7 @@ class InventoryService:
         product.unit_price = unit_price
         product.reorder_level = reorder_level
         product.supplier_id = supplier_id
+        self._product_repository.save(self._products)
 
     # Stock quantity increases when received
     def receive_stock(self, product_id: str, quantity: int) -> None:
@@ -67,6 +72,11 @@ class InventoryService:
         if product is None:
             raise ValueError("Product not found.")
         product.increase_stock(quantity)
+        self._product_repository.save(self._products) # Save to JSON
+
+    # Used when another service changes product stock and a save is needed
+    def save_products(self) -> None:
+        self._product_repository.save(self._products) # Save to JSON
 
     # Returns all products that are at or below their reorder level
     def low_stock_products(self) -> list[Product]:

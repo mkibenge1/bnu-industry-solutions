@@ -1,18 +1,15 @@
 from __future__ import annotations
-
 from datetime import datetime
-
 from models.bnu_models import (
     CustomerOrder,
     OrderLine,
     OrderStatus,
-    Product,
     PurchaseOrder,
 )
+from repositories.order_repository import OrderRepository
 from services.finance_service import FinanceService
 from services.inventory_service import InventoryService
 from services.supplier_service import SupplierService
-
 
 class OrderService:
     def __init__(
@@ -24,15 +21,24 @@ class OrderService:
         self._inventory_service = inventory_service
         self._supplier_service = supplier_service
         self._finance_service = finance_service
-        self._purchase_orders: list[PurchaseOrder] = []
-        self._customer_orders: list[CustomerOrder] = []
+        self._purchase_repository = OrderRepository("data/purchase_orders.json")
+        self._customer_repository = OrderRepository("data/customer_orders.json")
+        self._purchase_orders: list[PurchaseOrder] = (
+            self._purchase_repository.load_purchase_orders()  # Load purchase orders from JSON
+        )
+        self._customer_orders: list[CustomerOrder] = (
+            self._customer_repository.load_customer_orders()  # Load customer orders from JSON
+        )
 
+    # Generates a new unique purchase order ID
     def _generate_purchase_order_id(self) -> str:
         return f"PO{len(self._purchase_orders) + 1:03}"
 
+    # Generates a new unique customer order ID
     def _generate_customer_order_id(self) -> str:
         return f"CO{len(self._customer_orders) + 1:03}"
 
+    # Create a new purchase order from a supplier
     def create_purchase_order(
         self,
         supplier_id: str,
@@ -58,8 +64,10 @@ class OrderService:
             order.add_line(line)
 
         self._purchase_orders.append(order)
+        self._purchase_repository.save_purchase_orders(self._purchase_orders) # Save purchase orders to JSON
         return order
 
+    # Create a new customer order and update stock
     def create_customer_order(
         self,
         customer_name: str,
@@ -91,6 +99,8 @@ class OrderService:
             product.reduce_stock(line.quantity)
 
         self._customer_orders.append(order)
+        self._customer_repository.save_customer_orders(self._customer_orders) # Save customer orders to JSON
+        self._inventory_service.save_products() # Save updated product stock
 
         self._finance_service.record_sale(
             amount=order.total_amount(),
@@ -100,32 +110,40 @@ class OrderService:
 
         return order
 
+    # Return all purchase orders in memory
     def list_purchase_orders(self) -> list[PurchaseOrder]:
         return self._purchase_orders.copy()
 
+    # Return all customer orders in memory
     def list_customer_orders(self) -> list[CustomerOrder]:
         return self._customer_orders.copy()
 
+    # Find a purchase order by ID
     def get_purchase_order_by_id(self, order_id: str) -> PurchaseOrder | None:
         for order in self._purchase_orders:
             if order.order_id == order_id:
                 return order
         return None
 
+    # Find a customer order by ID
     def get_customer_order_by_id(self, order_id: str) -> CustomerOrder | None:
         for order in self._customer_orders:
             if order.order_id == order_id:
                 return order
         return None
 
+    # Mark a purchase order as shipped
     def mark_purchase_order_as_shipped(self, order_id: str) -> None:
         order = self.get_purchase_order_by_id(order_id)
         if order is None:
             raise ValueError("Purchase order not found.")
         if order.status != OrderStatus.PENDING:
             raise ValueError("Only pending orders can be marked as shipped.")
-        order.update_status(OrderStatus.SHIPPED)
 
+        order.update_status(OrderStatus.SHIPPED)
+        self._purchase_repository.save_purchase_orders(self._purchase_orders) # Save order status change
+
+    # Receive a shipped purchase order and update inventory
     def receive_purchase_order(self, order_id: str) -> None:
         order = self.get_purchase_order_by_id(order_id)
         if order is None:
@@ -139,7 +157,9 @@ class OrderService:
                 raise ValueError(f"Product {line.product_id} not found.")
             product.increase_stock(line.quantity)
 
+        self._inventory_service.save_products() # Save updated stock
         order.update_status(OrderStatus.DELIVERED)
+        self._purchase_repository.save_purchase_orders(self._purchase_orders) # Save order status change
 
         self._finance_service.record_expense(
             amount=order.total_amount(),
