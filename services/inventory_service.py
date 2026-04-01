@@ -78,6 +78,14 @@ class InventoryService:
     def save_products(self) -> None:
         self._product_repository.save(self._products) # Save to JSON
 
+    # Deletes a product from inventory
+    def delete_product(self, product_id: str) -> None:
+        product = self.get_product_by_id(product_id)
+        if product is None:
+            raise ValueError("Product not found.")
+        self._products.remove(product)
+        self._product_repository.save(self._products)
+
     # Returns all products that are at or below their reorder level
     def low_stock_products(self) -> list[Product]:
         return [product for product in self._products if product.is_low_stock()]

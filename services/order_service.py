@@ -118,6 +118,136 @@ class OrderService:
     def list_customer_orders(self) -> list[CustomerOrder]:
         return self._customer_orders.copy()
 
+    # Delete a purchase order by ID if its still pending
+    def delete_purchase_order(self, order_id: str) -> None:
+        order = self.get_purchase_order_by_id(order_id)
+        if order is None:
+            raise ValueError("Purchase order not found.")
+        if order.status != OrderStatus.PENDING:
+            raise ValueError("Only pending purchase orders can be deleted.")
+        self._purchase_orders.remove(order)
+        self._purchase_repository.save_purchase_orders(self._purchase_orders)
+
+    # Delete a customer order by ID if its still pending
+    def delete_customer_order(self, order_id: str) -> None:
+        order = self.get_customer_order_by_id(order_id)
+        if order is None:
+            raise ValueError("Customer order not found.")
+        if order.status != OrderStatus.PENDING:
+            raise ValueError("Only pending customer orders can be deleted.")
+
+        for line in order.lines:
+            product = self._inventory_service.get_product_by_id(line.product_id)
+            if product is not None:
+                product.increase_stock(line.quantity)
+
+        self._customer_orders.remove(order)
+        self._customer_repository.save_customer_orders(self._customer_orders)
+        self._inventory_service.save_products()
+
+    # Update a purchase order if its still pending
+    def update_purchase_order(
+        self,
+        order_id: str,
+        supplier_id: str | None = None,
+        lines: list[OrderLine] | None = None,
+    ) -> None:
+        order = self.get_purchase_order_by_id(order_id)
+        if order is None:
+            raise ValueError("Purchase order not found.")
+        if order.status != OrderStatus.PENDING:
+            raise ValueError("Only pending purchase orders can be updated.")
+
+        if supplier_id is not None:
+            supplier = self._supplier_service.get_supplier_by_id(supplier_id)
+            if supplier is None or not supplier.is_active:
+                raise ValueError("Supplier not found or inactive.")
+            order.supplier_id = supplier_id
+
+        if lines is not None:
+            order.lines = []
+            for line in lines:
+                order.add_line(line)
+
+        self._purchase_repository.save_purchase_orders(self._purchase_orders)
+
+    # Update a customer order if its still pending
+    def update_customer_order(
+        self,
+        order_id: str,
+        customer_name: str | None = None,
+        customer_email: str | None = None,
+        lines: list[OrderLine] | None = None,
+    ) -> None:
+        order = self.get_customer_order_by_id(order_id)
+        if order is None:
+            raise ValueError("Customer order not found.")
+        if order.status != OrderStatus.PENDING:
+            raise ValueError("Only pending customer orders can be updated.")
+
+        if customer_name is not None:
+            order.customer_name = customer_name
+        if customer_email is not None:
+            order.customer_email = customer_email
+
+        if lines is not None:
+            self._adjust_customer_order_stock(order, lines)
+            order.lines = []
+            for line in lines:
+                order.add_line(line)
+            self._inventory_service.save_products()
+
+        self._customer_repository.save_customer_orders(self._customer_orders)
+
+    def _adjust_customer_order_stock(
+        self,
+        order: CustomerOrder,
+        new_lines: list[OrderLine],
+    ) -> None:
+        old_quantities: dict[str, int] = {}
+        new_quantities: dict[str, int] = {}
+
+        for line in order.lines:
+            old_quantities[line.product_id] = old_quantities.get(line.product_id, 0) + line.quantity
+        for line in new_lines:
+            if line.quantity <= 0:
+                raise ValueError("Quantity must be greater than zero.")
+            if line.unit_price < 0:
+                raise ValueError("Price cannot be negative.")
+            new_quantities[line.product_id] = new_quantities.get(line.product_id, 0) + line.quantity
+
+        # validate all products exist and enough stock is available for any increase
+        for product_id, new_quantity in new_quantities.items():
+            product = self._inventory_service.get_product_by_id(product_id)
+            if product is None:
+                raise ValueError(f"Product {product_id} not found.")
+
+        for product_id, old_quantity in old_quantities.items():
+            product = self._inventory_service.get_product_by_id(product_id)
+            if product is None:
+                raise ValueError(f"Product {product_id} not found.")
+
+        adjustments: dict[str, int] = {}
+        all_product_ids = set(old_quantities) | set(new_quantities)
+        for product_id in all_product_ids:
+            adjustments[product_id] = new_quantities.get(product_id, 0) - old_quantities.get(product_id, 0)
+
+        for product_id, diff in adjustments.items():
+            product = self._inventory_service.get_product_by_id(product_id)
+            if product is None:
+                continue
+            if diff > 0 and product.stock_quantity < diff:
+                raise ValueError(f"Insufficient stock for product {product.product_id}.")
+
+        for product_id, diff in adjustments.items():
+            product = self._inventory_service.get_product_by_id(product_id)
+            if product is None:
+                continue
+            if diff > 0:
+                product.reduce_stock(diff)
+            elif diff < 0:
+                product.increase_stock(-diff)
+
     # Find a purchase order by ID
     def get_purchase_order_by_id(self, order_id: str) -> PurchaseOrder | None:
         for order in self._purchase_orders:

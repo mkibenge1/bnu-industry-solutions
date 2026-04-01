@@ -37,7 +37,6 @@ class FinanceService:
         self._transaction_repository.save(self._transactions)  # Save transaction to JSON
         return transaction
 
-    # Record a sale transaction
     # Record an expense transaction
     def record_expense(
         self,
