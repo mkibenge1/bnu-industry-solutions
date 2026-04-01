@@ -13,7 +13,7 @@ class Menu:
         self.inventory_service = inventory_service
         self.order_service = order_service
         self.finance_service = finance_service
-    # Input prompt helpers with validation
+    # Validates text input with checks for required fields, length
     def _prompt_text(self, prompt, default=None, required=True, min_length=1, max_length=None):
         while True:
             value = input(prompt).strip()
@@ -31,7 +31,7 @@ class Menu:
                 print(f"Enter no more than {max_length} characters. Type CANCEL to return.")
                 continue
             return value
-
+    # Validates name input with checks for length and allowed characters
     def _prompt_name(self, prompt, default=None, required=True, min_length=2, max_length=50):
         while True:
             value = self._prompt_text(prompt, default=default, required=required)
@@ -50,7 +50,7 @@ class Menu:
                 print("Enter a valid name. Type CANCEL to return.")
                 continue
             return value
-
+    # Validates email address input with basic checks for format and characters
     def _prompt_email(self, prompt, default=None, required=True, min_length=5, max_length=100):
         while True:
             value = self._prompt_text(prompt, default=default, required=required, min_length=min_length, max_length=max_length)
@@ -65,7 +65,7 @@ class Menu:
                 print("Enter a valid email address. Type CANCEL to return.")
                 continue
             return normalized
-
+    # Validates phone number input with checks for digits, length, and allowed characters
     def _prompt_phone(self, prompt, default=None, required=True, min_digits=7, max_length=20):
         while True:
             value = self._prompt_text(prompt, default=default, required=required)
@@ -82,7 +82,7 @@ class Menu:
                 print("Enter a valid phone number. Type CANCEL to return.")
                 continue
             return value
-
+    # Validates integer input with checks for required fields, default values, and minimum value
     def _prompt_int(self, prompt, default=None, required=True, min_value=None):
         while True:
             value = input(prompt).strip()
@@ -104,7 +104,7 @@ class Menu:
                 print(f"Enter a number greater than or equal to {min_value}.")
                 continue
             return parsed
-
+    # Validates user float input with checks for required fields, default values, and minimum value
     def _prompt_float(self, prompt, default=None, required=True, min_value=None):
         while True:
             value = input(prompt).strip()
@@ -126,7 +126,7 @@ class Menu:
                 print(f"Enter a number greater than or equal to {min_value}.")
                 continue
             return parsed
-
+    # Search for suppliers by ID
     def _prompt_lookup_supplier_id(self, prompt, default=None):
         while True:
             supplier_id = self._prompt_text(prompt, default=default, required=default is None)
@@ -135,7 +135,7 @@ class Menu:
             if self.supplier_service.get_supplier_by_id(supplier_id) is not None:
                 return supplier_id
             print("Supplier not found. Enter a valid Supplier ID or type CANCEL.")
-
+    # Search inventory for products using ID
     def _prompt_lookup_product_id(self, prompt, default=None):
         while True:
             product_id = self._prompt_text(prompt, default=default, required=default is None)
@@ -145,6 +145,7 @@ class Menu:
                 return product_id
             print("Product not found. Enter a valid Product ID or type CANCEL.")
 
+    # Search for customer/purchase orders by ID
     def _prompt_lookup_order_id(self, prompt, order_type):
         while True:
             order_id = self._prompt_text(prompt)
@@ -299,11 +300,52 @@ class Menu:
                 ("View Financial Transactions", self.view_financial_transactions),
                 ("View Sales Transactions", self.view_sales_transactions),
                 ("View Expense Transactions", self.view_expense_transactions),
+                ("Export Transactions to CSV", self.export_financial_transactions_csv),
+                ("Generate Financial Chart", self.generate_financial_chart),
                 ("Back", None),
             ],
         )
 
-    # NOTE: Inventory management menu.
+    # Create CSV file with all financial transactions
+    def export_financial_transactions_csv(self) -> None:
+        print("\n=== EXPORT FINANCIAL TRANSACTIONS TO CSV ===")
+        default_path = "data/transactions.csv"
+        file_path = self._prompt_text(
+            f"CSV output path [{default_path}]: ",
+            default=default_path,
+            required=False,
+            min_length=1,
+            max_length=200,
+        )
+        if file_path is None:
+            return
+
+        try:
+            output_path = self.finance_service.export_transactions_csv(file_path)
+            print(f"Transactions exported to {output_path}")
+        except Exception as error:
+            print(f"Error exporting CSV: {error}")
+    # Generate a bar chart comparing sales and expenses over time, saved as an image file
+    def generate_financial_chart(self) -> None:
+        print("\n=== GENERATE FINANCIAL CHART ===")
+        default_path = "data/financial_summary.png"
+        file_path = self._prompt_text(
+            f"Chart output path [{default_path}]: ",
+            default=default_path,
+            required=False,
+            min_length=1,
+            max_length=200,
+        )
+        if file_path is None:
+            return
+
+        try:
+            output_path = self.finance_service.plot_financial_summary(file_path)
+            print(f"Financial chart saved to {output_path}")
+        except Exception as error:
+            print(f"Error generating chart: {error}")
+
+    # Inventory management menu
     def _run_inventory_menu(self) -> None:
         self._run_menu(
             "INVENTORY",
@@ -792,7 +834,7 @@ class Menu:
                 transaction.description,
             ])
         self._format_table(["Date", "Type", "Amount", "Description"], rows)
-    
+    # Creates purchase order
     def create_purchase_order(self) -> None:
         print("\n=== CREATE PURCHASE ORDER ===")
         while True:
@@ -811,7 +853,6 @@ class Menu:
             if product is None:
                 print("Product not found.")
                 continue
-
             order_line = OrderLine(
                 product_id=product.product_id,
                 quantity=quantity,
@@ -828,7 +869,7 @@ class Menu:
             except ValueError as error:
                 print(f"Error: {error}")
                 print("Try again or type CANCEL to return.")
-    
+    # Marks a purchase order as shipped
     def mark_purchase_order_as_shipped(self) -> None:
         print("\n=== MARK PURCHASE ORDER AS SHIPPED ===")
         while True:
@@ -843,7 +884,7 @@ class Menu:
             except ValueError as error:
                 print(f"Error: {error}")
                 print("Try again or type CANCEL to return.")
-
+    # Marks a purchase order as delivered and updates associated stock levels
     def receive_purchase_order(self) -> None:
         print("=== RECEIVE PURCHASE ORDER ===")
         while True:

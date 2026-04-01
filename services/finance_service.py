@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import csv
 from datetime import datetime
+from pathlib import Path
 
 from models.bnu_models import (
     ExpenseTransaction,
@@ -88,3 +90,87 @@ class FinanceService:
     # Calculate profit from sales minus expenses
     def profit(self) -> float:
         return self.total_sales() - self.total_expenses()
+    
+    # Prepare transaction data for CSV export
+    def _transaction_records(self) -> list[dict[str, str | float]]:
+        return [
+            {
+                "transaction_id": transaction.transaction_id,
+                "amount": transaction.amount,
+                "created_at": transaction.created_at.isoformat(),
+                "description": transaction.description,
+                "transaction_type": transaction.transaction_type().value,
+                "related_order_id": transaction.related_order_id,
+            }
+            for transaction in self._transactions
+        ]
+    
+    # Export all transactions to CSV and return file path
+    def export_transactions_csv(self, file_path: str = "data/transactions.csv") -> str:
+        path = Path(file_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+        try:
+            import pandas as pd
+            df = pd.DataFrame(self._transaction_records())
+            df.to_csv(path, index=False)
+        except ImportError:
+            with path.open("w", encoding="utf-8", newline="") as file:
+                writer = csv.DictWriter(
+                    file,
+                    fieldnames=[
+                        "transaction_id",
+                        "amount",
+                        "created_at",
+                        "description",
+                        "transaction_type",
+                        "related_order_id",
+                    ],
+                )
+                writer.writeheader()
+                writer.writerows(self._transaction_records())
+
+        return str(path)
+    # Create bar chart for sales v expenses by date
+    def plot_financial_summary(self, file_path: str = "data/financial_summary.png") -> str:
+        try:
+            import pandas as pd
+            import matplotlib.pyplot as plt
+        except ImportError as error:
+            raise ImportError("pandas and matplotlib are required for chart generation") from error
+
+        records = self._transaction_records()
+        if not records:
+            raise ValueError("No transactions available to plot.")
+        # Create dataframe and prepare for plotting
+        df = pd.DataFrame(records)
+        df["created_at"] = pd.to_datetime(df["created_at"])
+        df["amount"] = df["amount"].astype(float)
+        df["date"] = df["created_at"].dt.date
+        df["type"] = df["transaction_type"].str.upper()
+
+        summary = df.groupby(["date", "type"])["amount"].sum().unstack(fill_value=0)
+        for label in ["SALE", "EXPENSE"]:
+            if label not in summary.columns:
+                summary[label] = 0.0
+        summary = summary[["SALE", "EXPENSE"]]
+        # Plotting 
+        ax = summary.plot(
+            kind="bar",
+            figsize=(10, 6),
+            rot=45,
+            title="Sales vs Expenses by Date",
+            ylabel="Amount (£)",
+            xlabel="Date",
+        )
+        ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"£{x:,.0f}"))
+        ax.legend(title="Type")
+        fig = ax.get_figure()
+        fig.tight_layout()
+
+        path = Path(file_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(path)
+        plt.close(fig)
+
+        return str(path)

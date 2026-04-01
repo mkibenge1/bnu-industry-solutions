@@ -7,6 +7,7 @@ class SupplierService:
         self._supplier_repository = SupplierRepository()
         self._suppliers: list[Supplier] = self._supplier_repository.load()
 
+    # Saves suppliers to JSON
     def _save_suppliers(self) -> None:
         self._supplier_repository.save(self._suppliers)
 

@@ -8,6 +8,7 @@ class ProductRepository:
     def __init__(self, file_path: str = "data/products.json") -> None:
         self._file_path = Path(file_path)
         self._file_path.parent.mkdir(parents=True, exist_ok=True)
+    # Save products to JSON file
     def save(self, products: list[Product]) -> None:
         product_data = []
 
@@ -26,7 +27,7 @@ class ProductRepository:
 
         with self._file_path.open("w", encoding="utf-8") as file:
             json.dump(product_data, file, indent=4)
-
+    # Load products from JSON file
     def load(self) -> list[Product]:
         if not self._file_path.exists():
             return []

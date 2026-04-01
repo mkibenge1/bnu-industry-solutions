@@ -184,7 +184,6 @@ class OrderService:
             raise ValueError("Customer order not found.")
         if order.status != OrderStatus.PENDING:
             raise ValueError("Only pending customer orders can be updated.")
-
         if customer_name is not None:
             order.customer_name = customer_name
         if customer_email is not None:
@@ -199,6 +198,7 @@ class OrderService:
 
         self._customer_repository.save_customer_orders(self._customer_orders)
 
+    # Adjust stock levels when updating a customer order details
     def _adjust_customer_order_stock(
         self,
         order: CustomerOrder,
@@ -221,7 +221,7 @@ class OrderService:
             product = self._inventory_service.get_product_by_id(product_id)
             if product is None:
                 raise ValueError(f"Product {product_id} not found.")
-
+        # validate all products exist for any decrease
         for product_id, old_quantity in old_quantities.items():
             product = self._inventory_service.get_product_by_id(product_id)
             if product is None:
@@ -231,7 +231,6 @@ class OrderService:
         all_product_ids = set(old_quantities) | set(new_quantities)
         for product_id in all_product_ids:
             adjustments[product_id] = new_quantities.get(product_id, 0) - old_quantities.get(product_id, 0)
-
         for product_id, diff in adjustments.items():
             product = self._inventory_service.get_product_by_id(product_id)
             if product is None:
@@ -290,7 +289,7 @@ class OrderService:
         self._inventory_service.save_products() # Save updated stock
         order.update_status(OrderStatus.DELIVERED)
         self._purchase_repository.save_purchase_orders(self._purchase_orders) # Save order status change
-
+        # Record expense
         self._finance_service.record_expense(
             amount=order.total_amount(),
             description=f"Purchase order {order.order_id}",
