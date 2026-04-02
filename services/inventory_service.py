@@ -9,7 +9,12 @@ class InventoryService:
 
     # Generates a new unique product ID
     def _generate_product_id(self) -> str:
-        return f"P{len(self._products) + 1:03}"
+        highest = 0
+        for product in self._products:
+            suffix = product.product_id[1:]
+            if product.product_id.startswith("P") and suffix.isdigit():
+                highest = max(highest, int(suffix))
+        return f"P{highest + 1:03}"
 
     # Adds a new product to inventory and automatically assigns an ID
     def add_product(

@@ -51,7 +51,7 @@ class SupplierRepository:
                     email=item["email"],
                     phone=item["phone"],
                     address=item["address"],
-                    is_active=item["is_active"],
+                    is_active=item.get("is_active", True),
                 )
             )
 

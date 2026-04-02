@@ -13,7 +13,12 @@ class SupplierService:
 
     # Generates unique ID
     def _generate_supplier_id(self) -> str:
-        return f"S{len(self._suppliers) + 1:03}"
+        highest = 0
+        for supplier in self._suppliers:
+            suffix = supplier.supplier_id[1:]
+            if supplier.supplier_id.startswith("S") and suffix.isdigit():
+                highest = max(highest, int(suffix))
+        return f"S{highest + 1:03}"
 
     # Adds a new supplier and assigns a unique ID
     def add_supplier(
@@ -68,10 +73,10 @@ class SupplierService:
         supplier.address = address
         self._save_suppliers() # Save to JSON
 
-    # Deactivates a supplier, preventing future orders from them
-    def deactivate_supplier(self, supplier_id: str) -> None:
+    # Deletes a supplier by ID
+    def delete_supplier(self, supplier_id: str) -> None:
         supplier = self.get_supplier_by_id(supplier_id)
         if supplier is None:
             raise ValueError("Supplier not found.")
-        supplier.is_active = False
+        self._suppliers.remove(supplier)
         self._save_suppliers() # Save to JSON

@@ -1,4 +1,5 @@
 from models.bnu_models import OrderLine
+from typing import Any
 
 
 class Menu:
@@ -14,7 +15,14 @@ class Menu:
         self.order_service = order_service
         self.finance_service = finance_service
     # Validates text input with checks for required fields, length
-    def _prompt_text(self, prompt, default=None, required=True, min_length=1, max_length=None):
+    def _prompt_text(
+        self,
+        prompt: str,
+        default: str | None = None,
+        required: bool = True,
+        min_length: int = 1,
+        max_length: int | None = None,
+    ) -> str | None:
         while True:
             value = input(prompt).strip()
             if value.lower() == "cancel":
@@ -32,7 +40,14 @@ class Menu:
                 continue
             return value
     # Validates name input with checks for length and allowed characters
-    def _prompt_name(self, prompt, default=None, required=True, min_length=2, max_length=50):
+    def _prompt_name(
+        self,
+        prompt: str,
+        default: str | None = None,
+        required: bool = True,
+        min_length: int = 2,
+        max_length: int = 50,
+    ) -> str | None:
         while True:
             value = self._prompt_text(prompt, default=default, required=required)
             if value is None:
@@ -51,7 +66,14 @@ class Menu:
                 continue
             return value
     # Validates email address input with basic checks for format and characters
-    def _prompt_email(self, prompt, default=None, required=True, min_length=5, max_length=100):
+    def _prompt_email(
+        self,
+        prompt: str,
+        default: str | None = None,
+        required: bool = True,
+        min_length: int = 5,
+        max_length: int = 100,
+    ) -> str | None:
         while True:
             value = self._prompt_text(prompt, default=default, required=required, min_length=min_length, max_length=max_length)
             if value is None:
@@ -66,7 +88,14 @@ class Menu:
                 continue
             return normalized
     # Validates phone number input with checks for digits, length, and allowed characters
-    def _prompt_phone(self, prompt, default=None, required=True, min_digits=7, max_length=20):
+    def _prompt_phone(
+        self,
+        prompt: str,
+        default: str | None = None,
+        required: bool = True,
+        min_digits: int = 7,
+        max_length: int = 20,
+    ) -> str | None:
         while True:
             value = self._prompt_text(prompt, default=default, required=required)
             if value is None:
@@ -83,7 +112,13 @@ class Menu:
                 continue
             return value
     # Validates integer input with checks for required fields, default values, and minimum value
-    def _prompt_int(self, prompt, default=None, required=True, min_value=None):
+    def _prompt_int(
+        self,
+        prompt: str,
+        default: int | None = None,
+        required: bool = True,
+        min_value: int | None = None,
+    ) -> int | None:
         while True:
             value = input(prompt).strip()
             if value.lower() == "cancel":
@@ -105,7 +140,13 @@ class Menu:
                 continue
             return parsed
     # Validates user float input with checks for required fields, default values, and minimum value
-    def _prompt_float(self, prompt, default=None, required=True, min_value=None):
+    def _prompt_float(
+        self,
+        prompt: str,
+        default: float | None = None,
+        required: bool = True,
+        min_value: float | None = None,
+    ) -> float | None:
         while True:
             value = input(prompt).strip()
             if value.lower() == "cancel":
@@ -127,7 +168,7 @@ class Menu:
                 continue
             return parsed
     # Search for suppliers by ID
-    def _prompt_lookup_supplier_id(self, prompt, default=None):
+    def _prompt_lookup_supplier_id(self, prompt: str, default: str | None = None) -> str | None:
         while True:
             supplier_id = self._prompt_text(prompt, default=default, required=default is None)
             if supplier_id is None:
@@ -136,7 +177,7 @@ class Menu:
                 return supplier_id
             print("Supplier not found. Enter a valid Supplier ID or type CANCEL.")
     # Search inventory for products using ID
-    def _prompt_lookup_product_id(self, prompt, default=None):
+    def _prompt_lookup_product_id(self, prompt: str, default: str | None = None) -> str | None:
         while True:
             product_id = self._prompt_text(prompt, default=default, required=default is None)
             if product_id is None:
@@ -146,7 +187,7 @@ class Menu:
             print("Product not found. Enter a valid Product ID or type CANCEL.")
 
     # Search for customer/purchase orders by ID
-    def _prompt_lookup_order_id(self, prompt, order_type):
+    def _prompt_lookup_order_id(self, prompt: str, order_type: str) -> str | None:
         while True:
             order_id = self._prompt_text(prompt)
             if order_id is None:
@@ -160,7 +201,7 @@ class Menu:
             print("Order not found. Enter a valid Order ID or type CANCEL.")
 
     # Generic menu runner for submenus
-    def _run_menu(self, title, options):
+    def _run_menu(self, title: str, options: list[tuple[str, Any]]) -> None:
         while True:
             print(f"\n=== {title} ===")
             for index, (label, _) in enumerate(options, start=1):
@@ -182,7 +223,7 @@ class Menu:
             action()
 
     # Table styling
-    def _format_table(self, headers, rows):
+    def _format_table(self, headers: list[str], rows: list[list[Any]]) -> None:
         widths = [len(header) for header in headers]
         for row in rows:
             for index, cell in enumerate(row):
@@ -197,7 +238,7 @@ class Menu:
             print(" | ".join(str(cell).ljust(widths[i]) for i, cell in enumerate(row)))
 
     # Print order in table layout.
-    def _print_order(self, order):
+    def _print_order(self, order: Any) -> None:
         print(f"Order ID: {order.order_id} | Status: {order.status.value.capitalize()} | Created: {order.created_at:%Y-%m-%d %H:%M}")
         if order.order_type() == "customer":
             print(f"Customer: {getattr(order, 'customer_name', '')} <{getattr(order, 'customer_email', '')}>")
@@ -215,6 +256,34 @@ class Menu:
         self._format_table(["Product ID", "Qty", "Unit Price", "Line Total"], lines)
         print(f"Total Amount: £{order.total_amount():.2f}")
         print()
+
+    # Format transactions into printable rows for summary tables.
+    def _transaction_rows(self, transactions: list[Any]) -> list[list[Any]]:
+        rows: list[list[Any]] = []
+        for transaction in transactions:
+            rows.append([
+                transaction.created_at.date(),
+                transaction.transaction_type().value.upper(),
+                f"£{transaction.amount:.2f}",
+                transaction.description,
+            ])
+        return rows
+
+    # Shared renderer for transaction tables with standard empty-list handling.
+    def _print_transactions_table(
+        self,
+        title: str,
+        transactions: list[Any],
+        empty_message: str,
+    ) -> None:
+        print(title)
+        if not transactions:
+            print(empty_message)
+            return
+        self._format_table(
+            ["Date", "Type", "Amount", "Description"],
+            self._transaction_rows(transactions),
+        )
 
     # Main menu
     def run(self) -> None:
@@ -286,7 +355,7 @@ class Menu:
                 ("View Suppliers", self.view_suppliers),
                 ("Add Supplier", self.add_supplier),
                 ("Update Supplier", self.update_supplier),
-                ("Deactivate Supplier", self.deactivate_supplier),
+                ("Delete Supplier", self.delete_supplier),
                 ("Back", None),
             ],
         )
@@ -534,17 +603,17 @@ class Menu:
                 print(f"Error: {error}")
                 print("Try again or type CANCEL to return.")
 
-    # Deactivate a supplier by ID
-    def deactivate_supplier(self) -> None:
-        print("\n=== DEACTIVATE SUPPLIER ===")
+    # Permanently deletes a supplier by ID
+    def delete_supplier(self) -> None:
+        print("\n=== DELETE SUPPLIER ===")
         while True:
             supplier_id = self._prompt_lookup_supplier_id("Supplier ID: ")
             if supplier_id is None:
                 return
 
             try:
-                self.supplier_service.deactivate_supplier(supplier_id)
-                print("Supplier deactivated successfully.")
+                self.supplier_service.delete_supplier(supplier_id)
+                print("Supplier deleted successfully.")
                 return
             except ValueError as error:
                 print(f"Error: {error}")
@@ -780,60 +849,30 @@ class Menu:
 
     # Shows every recorded financial transaction
     def view_financial_transactions(self) -> None:
-        print("\n=== FINANCIAL TRANSACTIONS ===")
         transactions = self.finance_service.get_all_transactions()
-
-        if not transactions:
-            print("No financial transactions found.")
-            return
-
-        rows = []
-        for transaction in transactions:
-            rows.append([
-                transaction.created_at.date(),
-                transaction.transaction_type().value.upper(),
-                f"£{transaction.amount:.2f}",
-                transaction.description,
-            ])
-        self._format_table(["Date", "Type", "Amount", "Description"], rows)
+        self._print_transactions_table(
+            "\n=== FINANCIAL TRANSACTIONS ===",
+            transactions,
+            "No financial transactions found.",
+        )
 
     # Shows only sales transactions
     def view_sales_transactions(self) -> None:
-        print("=== SALES TRANSACTIONS ===")
         transactions = self.finance_service.get_sales_transactions()
-
-        if not transactions:
-            print("No sales transactions found.")
-            return
-
-        rows = []
-        for transaction in transactions:
-            rows.append([
-                transaction.created_at.date(),
-                transaction.transaction_type().value.upper(),
-                f"£{transaction.amount:.2f}",
-                transaction.description,
-            ])
-        self._format_table(["Date", "Type", "Amount", "Description"], rows)
+        self._print_transactions_table(
+            "=== SALES TRANSACTIONS ===",
+            transactions,
+            "No sales transactions found.",
+        )
 
     # Shows only expense transactions
     def view_expense_transactions(self) -> None:
-        print("=== EXPENSE TRANSACTIONS ===")
         transactions = self.finance_service.get_expense_transactions()
-
-        if not transactions:
-            print("No expense transactions found.")
-            return
-
-        rows = []
-        for transaction in transactions:
-            rows.append([
-                transaction.created_at.date(),
-                transaction.transaction_type().value.upper(),
-                f"£{transaction.amount:.2f}",
-                transaction.description,
-            ])
-        self._format_table(["Date", "Type", "Amount", "Description"], rows)
+        self._print_transactions_table(
+            "=== EXPENSE TRANSACTIONS ===",
+            transactions,
+            "No expense transactions found.",
+        )
     # Creates purchase order
     def create_purchase_order(self) -> None:
         print("\n=== CREATE PURCHASE ORDER ===")

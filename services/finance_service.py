@@ -19,7 +19,12 @@ class FinanceService:
 
     # Generate a new unique transaction ID
     def _generate_transaction_id(self) -> str:
-        return f"T{len(self._transactions) + 1:03}"
+        highest = 0
+        for transaction in self._transactions:
+            suffix = transaction.transaction_id[1:]
+            if transaction.transaction_id.startswith("T") and suffix.isdigit():
+                highest = max(highest, int(suffix))
+        return f"T{highest + 1:03}"
 
     # Record a sale transaction
     def record_sale(

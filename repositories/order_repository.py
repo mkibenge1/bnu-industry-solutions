@@ -62,16 +62,16 @@ class OrderRepository:
             order = PurchaseOrder(
                 order_id=item["order_id"],
                 created_at=datetime.fromisoformat(item["created_at"]),
-                status=OrderStatus(item["status"]),
+                status=OrderStatus(item.get("status", OrderStatus.PENDING.value)),
                 supplier_id=item["supplier_id"],
                 expected_delivery_date=(
                     datetime.fromisoformat(item["expected_delivery_date"])
-                    if item["expected_delivery_date"] is not None
+                    if item.get("expected_delivery_date") is not None
                     else None
                 ),
             )
 
-            for line_data in item["lines"]:
+            for line_data in item.get("lines", []):
                 order.add_line(
                     OrderLine(
                         product_id=line_data["product_id"],
@@ -125,12 +125,12 @@ class OrderRepository:
             order = CustomerOrder(
                 order_id=item["order_id"],
                 created_at=datetime.fromisoformat(item["created_at"]),
-                status=OrderStatus(item["status"]),
-                customer_name=item["customer_name"],
-                customer_email=item["customer_email"],
+                status=OrderStatus(item.get("status", OrderStatus.PENDING.value)),
+                customer_name=item.get("customer_name", ""),
+                customer_email=item.get("customer_email", ""),
             )
 
-            for line_data in item["lines"]:
+            for line_data in item.get("lines", []):
                 order.add_line(
                     OrderLine(
                         product_id=line_data["product_id"],

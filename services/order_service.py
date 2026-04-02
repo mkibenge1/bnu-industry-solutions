@@ -32,11 +32,23 @@ class OrderService:
 
     # Generates a new unique purchase order ID
     def _generate_purchase_order_id(self) -> str:
-        return f"PO{len(self._purchase_orders) + 1:03}"
+        highest = 0
+        for order in self._purchase_orders:
+            if order.order_id.startswith("PO"):
+                suffix = order.order_id[2:]
+                if suffix.isdigit():
+                    highest = max(highest, int(suffix))
+        return f"PO{highest + 1:03}"
 
     # Generates a new unique customer order ID
     def _generate_customer_order_id(self) -> str:
-        return f"CO{len(self._customer_orders) + 1:03}"
+        highest = 0
+        for order in self._customer_orders:
+            if order.order_id.startswith("CO"):
+                suffix = order.order_id[2:]
+                if suffix.isdigit():
+                    highest = max(highest, int(suffix))
+        return f"CO{highest + 1:03}"
 
     # Create a new purchase order from a supplier
     def create_purchase_order(
