@@ -14,5 +14,21 @@
         "description": "Purchase order PO001",
         "transaction_type": "expense",
         "related_order_id": "PO001"
+    },
+    {
+        "transaction_id": "T003",
+        "amount": 12.99,
+        "created_at": "2026-03-31T22:49:52.426274",
+        "description": "Customer order CO002",
+        "transaction_type": "sale",
+        "related_order_id": "CO002"
+    },
+    {
+        "transaction_id": "T004",
+        "amount": 12.99,
+        "created_at": "2026-03-31T23:38:06.404942",
+        "description": "Customer order CO003",
+        "transaction_type": "sale",
+        "related_order_id": "CO003"
     }
 ]

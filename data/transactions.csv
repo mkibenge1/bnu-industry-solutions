@@ -1,0 +1,5 @@
+transaction_id,amount,created_at,description,transaction_type,related_order_id
+T001,12.99,2026-03-31T22:14:16.512761,Customer order CO001,sale,CO001
+T002,64.95,2026-03-31T22:29:57.757882,Purchase order PO001,expense,PO001
+T003,12.99,2026-03-31T22:49:52.426274,Customer order CO002,sale,CO002
+T004,12.99,2026-03-31T23:38:06.404942,Customer order CO003,sale,CO003
